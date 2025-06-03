@@ -346,11 +346,12 @@ void ViewportRotationControl::_draw_axis(const Axis2D &p_axis) {
 	//const Color c = focused ? Color(axis_color.lightened(0.75), 1.0) : Color(axis_color, alpha);
 	const Color c = focused ? Color(axis_color.lightened(0.25), 1.0) : Color(axis_color, alpha);
 
-	// Highlight positive text when hovered
+	// Highlight positive axis text when hovered.
 	const Color c_positive_axis = focused ? Color(1.0, 1.0, 1.0, alpha) : Color(0.0, 0.0, 0.0, alpha * 0.6);
 
-	// Reveal negative axes when highlighted.
-	const Color c_negative_axis = focused ? Color(0.0, 0.0, 0.0, alpha * 0.8) : Color(axis_color, 0);
+	// Highlight negative axis text when hovered, but hide when not focused.
+	const Color c_negative_axis = focused ? Color(1.0, 1.0, 1.0, alpha) : Color(axis_color, 0);
+	//const Color c_negative_axis = focused ? Color(0.0, 0.0, 0.0, alpha * 0.8) : Color(axis_color, 0);
 
 	if (positive) {
 		// Draw axis lines for the positive axes.
@@ -362,6 +363,11 @@ void ViewportRotationControl::_draw_axis(const Axis2D &p_axis) {
 
 		draw_circle(p_axis.screen_point, AXIS_CIRCLE_RADIUS, c, true, -1.0, true);
 		//draw_circle(p_axis.screen_point, AXIS_CIRCLE_RADIUS, c_positive_axis, false, 1.0, true);
+
+		// Attempt to draw a highlight circle around the axis node in focus.
+		if (focused && is_clicked || focused && is_dragged) {
+			draw_circle(p_axis.screen_point, AXIS_CIRCLE_RADIUS, c_positive_axis, false, 1.0, true);
+		}
 
 		// Draw the axis letter for the positive axes.
 		const String axis_name = direction == 0 ? "X" : (direction == 1 ? "Y" : "Z");
@@ -376,15 +382,15 @@ void ViewportRotationControl::_draw_axis(const Axis2D &p_axis) {
 		draw_circle(p_axis.screen_point, AXIS_CIRCLE_RADIUS, c, true, -1.0, true);
 		draw_circle(p_axis.screen_point, AXIS_CIRCLE_RADIUS * 0.8, c.darkened(0.4), true, -1.0, true);
 
-		// Draw the axis letter for the negative axes.
+		// Draw the text for the negative axes.
 		const String axis_name = direction == 0 ? "-X" : (direction == 1 ? "-Y" : "-Z");
 		const Ref<Font> &font = get_theme_font(SNAME("rotation_control"), EditorStringName(EditorFonts));
 		const int font_size = get_theme_font_size(SNAME("rotation_control_size"), EditorStringName(EditorFonts));
 		const Size2 char_size = font->get_char_size(axis_name[0], font_size);
 		const Vector2 char_offset = Vector2(-char_size.width / 2.0, char_size.height * 0.25);
 
-		// Draw string for negative axes.
-		draw_string(font, p_axis.screen_point + (char_offset - Vector2(8.0, 0.0)), axis_name, HORIZONTAL_ALIGNMENT_LEFT, -1.0F, font_size, c_negative_axis);
+		// WIP default offset value: Vector2(8.0, 0.0)
+		draw_string(font, p_axis.screen_point + (char_offset - Vector2(6.0, 0.0)), axis_name, HORIZONTAL_ALIGNMENT_LEFT, -1.0F, font_size, c_negative_axis);
 	}
 }
 
@@ -427,6 +433,7 @@ void ViewportRotationControl::_process_click(int p_index, Vector2 p_position, bo
 		return;
 	}
 	if (p_pressed) {
+		is_clicked = true;
 		if (p_position.distance_to(get_size() / 2.0) < get_size().x / 2.0) {
 			orbiting_index = p_index;
 		}
@@ -440,11 +447,13 @@ void ViewportRotationControl::_process_click(int p_index, Vector2 p_position, bo
 			Input::get_singleton()->set_mouse_mode(Input::MOUSE_MODE_VISIBLE);
 			Input::get_singleton()->warp_mouse(orbiting_mouse_start);
 		}
+		is_clicked = false;
 	}
 }
 
 void ViewportRotationControl::_process_drag(Ref<InputEventWithModifiers> p_event, int p_index, Vector2 p_position, Vector2 p_relative_position) {
 	if (orbiting_index == p_index && gizmo_activated) {
+		is_dragged = true;
 		if (Input::get_singleton()->get_mouse_mode() == Input::MOUSE_MODE_VISIBLE) {
 			Input::get_singleton()->set_mouse_mode(Input::MOUSE_MODE_CAPTURED);
 			orbiting_mouse_start = p_position;
@@ -453,6 +462,7 @@ void ViewportRotationControl::_process_drag(Ref<InputEventWithModifiers> p_event
 		viewport->_nav_orbit(p_event, p_relative_position);
 		focused_axis = -1;
 	} else {
+		is_dragged = false;
 		_update_focus();
 	}
 }
