@@ -343,7 +343,14 @@ void ViewportRotationControl::_draw_axis(const Axis2D &p_axis) {
 	const Color axis_color = axis_colors[direction];
 	const double min_alpha = 0.35;
 	const double alpha = focused ? 1.0 : Math::remap((p_axis.z_axis + 1.0) / 2.0, 0, 0.5, min_alpha, 1.0);
-	const Color c = focused ? Color(axis_color.lightened(0.75), 1.0) : Color(axis_color, alpha);
+	//const Color c = focused ? Color(axis_color.lightened(0.75), 1.0) : Color(axis_color, alpha);
+	const Color c = focused ? Color(axis_color.lightened(0.25), 1.0) : Color(axis_color, alpha);
+
+	// Highlight positive text when hovered
+	const Color c_positive_axis = focused ? Color(1.0, 1.0, 1.0, alpha) : Color(0.0, 0.0, 0.0, alpha * 0.6);
+
+	// Reveal negative axes when highlighted.
+	const Color c_negative_axis = focused ? Color(0.0, 0.0, 0.0, alpha * 0.8) : Color(axis_color, 0);
 
 	if (positive) {
 		// Draw axis lines for the positive axes.
@@ -354,6 +361,7 @@ void ViewportRotationControl::_draw_axis(const Axis2D &p_axis) {
 		draw_line(center + diff.limit_length(0.5 * EDSCALE), center + diff.limit_length(line_length), c, 1.5 * EDSCALE, true);
 
 		draw_circle(p_axis.screen_point, AXIS_CIRCLE_RADIUS, c, true, -1.0, true);
+		//draw_circle(p_axis.screen_point, AXIS_CIRCLE_RADIUS, c_positive_axis, false, 1.0, true);
 
 		// Draw the axis letter for the positive axes.
 		const String axis_name = direction == 0 ? "X" : (direction == 1 ? "Y" : "Z");
@@ -361,11 +369,22 @@ void ViewportRotationControl::_draw_axis(const Axis2D &p_axis) {
 		const int font_size = get_theme_font_size(SNAME("rotation_control_size"), EditorStringName(EditorFonts));
 		const Size2 char_size = font->get_char_size(axis_name[0], font_size);
 		const Vector2 char_offset = Vector2(-char_size.width / 2.0, char_size.height * 0.25);
-		draw_char(font, p_axis.screen_point + char_offset, axis_name, font_size, Color(0.0, 0.0, 0.0, alpha * 0.6));
+		//draw_char(font, p_axis.screen_point + char_offset, axis_name, font_size, Color(0.0, 0.0, 0.0, alpha * 0.6));
+		draw_char(font, p_axis.screen_point + char_offset, axis_name, font_size, c_positive_axis);
 	} else {
 		// Draw an outline around the negative axes.
 		draw_circle(p_axis.screen_point, AXIS_CIRCLE_RADIUS, c, true, -1.0, true);
 		draw_circle(p_axis.screen_point, AXIS_CIRCLE_RADIUS * 0.8, c.darkened(0.4), true, -1.0, true);
+
+		// Draw the axis letter for the negative axes.
+		const String axis_name = direction == 0 ? "-X" : (direction == 1 ? "-Y" : "-Z");
+		const Ref<Font> &font = get_theme_font(SNAME("rotation_control"), EditorStringName(EditorFonts));
+		const int font_size = get_theme_font_size(SNAME("rotation_control_size"), EditorStringName(EditorFonts));
+		const Size2 char_size = font->get_char_size(axis_name[0], font_size);
+		const Vector2 char_offset = Vector2(-char_size.width / 2.0, char_size.height * 0.25);
+
+		// Draw string for negative axes.
+		draw_string(font, p_axis.screen_point + (char_offset - Vector2(8.0, 0.0)), axis_name, HORIZONTAL_ALIGNMENT_LEFT, -1.0F, font_size, c_negative_axis);
 	}
 }
 

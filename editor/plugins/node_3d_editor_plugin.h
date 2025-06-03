@@ -85,6 +85,7 @@ class ViewportRotationControl : public Control {
 	int orbiting_index = -1;
 	int focused_axis = -2;
 	bool gizmo_activated = false;
+	bool is_clicked = false;
 
 	const float AXIS_CIRCLE_RADIUS = 8.0f * EDSCALE;
 
