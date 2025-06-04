@@ -327,11 +327,15 @@ void ViewportRotationControl::_draw() {
 	if (focused_axis > -2 || orbiting_index != -1) {
 		draw_circle(center, radius, Color(0.5, 0.5, 0.5, 0.25), true, -1.0, true);
 	}
+	//if (is_dragged) {
+	//	draw_circle(center, radius, Color(0.5, 0.5, 0.5, 0.75), false, 1.0, true);
+	//}
 
 	Vector<Axis2D> axis_to_draw;
 	_get_sorted_axis(axis_to_draw);
 	for (int i = 0; i < axis_to_draw.size(); ++i) {
 		_draw_axis(axis_to_draw[i]);
+		//Adding a tooltip here will make it so a tooltip appears in the orbit circle OR one of the axis nodes.
 	}
 }
 
@@ -346,6 +350,7 @@ void ViewportRotationControl::_draw_axis(const Axis2D &p_axis) {
 	//const Color c = focused ? Color(axis_color.lightened(0.75), 1.0) : Color(axis_color, alpha);
 	const Color c = focused ? Color(axis_color.lightened(0.25), 1.0) : Color(axis_color, alpha);
 
+	//print_line(focused_axis);
 	// Highlight positive axis text when hovered.
 	const Color c_positive_axis = focused ? Color(1.0, 1.0, 1.0, alpha) : Color(0.0, 0.0, 0.0, alpha * 0.6);
 
@@ -365,8 +370,25 @@ void ViewportRotationControl::_draw_axis(const Axis2D &p_axis) {
 		//draw_circle(p_axis.screen_point, AXIS_CIRCLE_RADIUS, c_positive_axis, false, 1.0, true);
 
 		// Attempt to draw a highlight circle around the axis node in focus.
-		if (focused && is_clicked || focused && is_dragged) {
-			draw_circle(p_axis.screen_point, AXIS_CIRCLE_RADIUS, c_positive_axis, false, 1.0, true);
+		//if (is_clicked && focused) {
+		//	draw_circle(p_axis.screen_point, AXIS_CIRCLE_RADIUS, c_positive_axis, false, 1.0, true);
+		//}
+
+		switch (focused_axis) {
+			case 0: {
+				this->set_tooltip_text("X");
+			} break;
+			case 1: {
+				this->set_tooltip_text("Y");
+			} break;
+			case 2: {
+				this->set_tooltip_text("Z");
+			} break;
+			case -1: {
+				this->set_tooltip_text("Orbit.");
+			} break;
+			case -2: {
+			} break;
 		}
 
 		// Draw the axis letter for the positive axes.
@@ -390,7 +412,22 @@ void ViewportRotationControl::_draw_axis(const Axis2D &p_axis) {
 		const Vector2 char_offset = Vector2(-char_size.width / 2.0, char_size.height * 0.25);
 
 		// WIP default offset value: Vector2(8.0, 0.0)
-		draw_string(font, p_axis.screen_point + (char_offset - Vector2(6.0, 0.0)), axis_name, HORIZONTAL_ALIGNMENT_LEFT, -1.0F, font_size, c_negative_axis);
+		draw_string(font, p_axis.screen_point + (char_offset - Vector2(7.0, 0.0)), axis_name, HORIZONTAL_ALIGNMENT_LEFT, -1.0F, font_size, c_negative_axis);
+
+		switch (focused_axis) {
+			case 3: {
+				this->set_tooltip_text("-X");
+			} break;
+			case 4: {
+				this->set_tooltip_text("-Y");
+			} break;
+			case 5: {
+				this->set_tooltip_text("-Z");
+			} break;
+			case -1: {
+				this->set_tooltip_text("Orbit.");
+			} break;
+		}
 	}
 }
 
@@ -438,6 +475,7 @@ void ViewportRotationControl::_process_click(int p_index, Vector2 p_position, bo
 			orbiting_index = p_index;
 		}
 	} else {
+		is_clicked = false;
 		if (focused_axis > -1 && gizmo_activated) {
 			viewport->_menu_option(axis_menu_options[focused_axis]);
 			_update_focus();
@@ -447,22 +485,22 @@ void ViewportRotationControl::_process_click(int p_index, Vector2 p_position, bo
 			Input::get_singleton()->set_mouse_mode(Input::MOUSE_MODE_VISIBLE);
 			Input::get_singleton()->warp_mouse(orbiting_mouse_start);
 		}
-		is_clicked = false;
 	}
 }
 
 void ViewportRotationControl::_process_drag(Ref<InputEventWithModifiers> p_event, int p_index, Vector2 p_position, Vector2 p_relative_position) {
 	if (orbiting_index == p_index && gizmo_activated) {
-		is_dragged = true;
+		//print_line("Dragging!");
 		if (Input::get_singleton()->get_mouse_mode() == Input::MOUSE_MODE_VISIBLE) {
 			Input::get_singleton()->set_mouse_mode(Input::MOUSE_MODE_CAPTURED);
+
 			orbiting_mouse_start = p_position;
 			viewport->previous_cursor = viewport->cursor;
 		}
 		viewport->_nav_orbit(p_event, p_relative_position);
 		focused_axis = -1;
 	} else {
-		is_dragged = false;
+		//print_line("No longer dragging!");
 		_update_focus();
 	}
 }
@@ -488,6 +526,7 @@ void ViewportRotationControl::gui_input(const Ref<InputEvent> &p_event) {
 		if (mb->get_button_index() == MouseButton::LEFT) {
 			_process_click(100, mb->get_position(), mb->is_pressed());
 			if (mb->is_pressed()) {
+				is_clicked = true;
 				gizmo_activated = true;
 				grab_focus();
 			}
