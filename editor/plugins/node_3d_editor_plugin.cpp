@@ -358,6 +358,10 @@ void ViewportRotationControl::_draw_axis(const Axis2D &p_axis) {
 	const Color c_negative_axis = focused ? Color(1.0, 1.0, 1.0, alpha) : Color(axis_color, 0);
 	//const Color c_negative_axis = focused ? Color(0.0, 0.0, 0.0, alpha * 0.8) : Color(axis_color, 0);
 
+	if (focused) {
+		this->set_tooltip_text("Viewport Rotation Control.\nClick: Change view.\nClick+Drag: Rotate view.");
+	}
+
 	if (positive) {
 		// Draw axis lines for the positive axes.
 		const Vector2 center = get_size() / 2.0;
@@ -373,23 +377,6 @@ void ViewportRotationControl::_draw_axis(const Axis2D &p_axis) {
 		//if (is_clicked && focused) {
 		//	draw_circle(p_axis.screen_point, AXIS_CIRCLE_RADIUS, c_positive_axis, false, 1.0, true);
 		//}
-
-		switch (focused_axis) {
-			case 0: {
-				this->set_tooltip_text("X");
-			} break;
-			case 1: {
-				this->set_tooltip_text("Y");
-			} break;
-			case 2: {
-				this->set_tooltip_text("Z");
-			} break;
-			case -1: {
-				this->set_tooltip_text("Orbit.");
-			} break;
-			case -2: {
-			} break;
-		}
 
 		// Draw the axis letter for the positive axes.
 		const String axis_name = direction == 0 ? "X" : (direction == 1 ? "Y" : "Z");
@@ -413,21 +400,6 @@ void ViewportRotationControl::_draw_axis(const Axis2D &p_axis) {
 
 		// WIP default offset value: Vector2(8.0, 0.0)
 		draw_string(font, p_axis.screen_point + (char_offset - Vector2(7.0, 0.0)), axis_name, HORIZONTAL_ALIGNMENT_LEFT, -1.0F, font_size, c_negative_axis);
-
-		switch (focused_axis) {
-			case 3: {
-				this->set_tooltip_text("-X");
-			} break;
-			case 4: {
-				this->set_tooltip_text("-Y");
-			} break;
-			case 5: {
-				this->set_tooltip_text("-Z");
-			} break;
-			case -1: {
-				this->set_tooltip_text("Orbit.");
-			} break;
-		}
 	}
 }
 
